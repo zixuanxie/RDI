@@ -2,7 +2,7 @@
 A Fast Algorithm for Calculating a Novel Degradation Index from RNA-seq Data
 
 ## Prerequisite
-Before using RDI package, make sure you have python3 and the required modules (argparse, numpy, pandas, math, random) installed. 
+Before using RDI package, make sure you have installed python3 and the required modules: argparse, numpy, pandas, math, and random. 
 
 ## Install RDI
 To install RDI, download the latest release RDI-RDIv1.0.0.tar.gz, then run
