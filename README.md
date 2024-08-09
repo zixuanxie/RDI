@@ -1,5 +1,6 @@
 # RDI
 A Fast Algorithm for Calculating a Novel Degradation Index from RNA-seq Data
+
 ## Install RDI
 To install RDI, download the source file RDI_0.0.0.9000.tar.gz, then run
 ```
