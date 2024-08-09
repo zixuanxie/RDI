@@ -1,0 +1,13 @@
+Package: RDI
+Title: RDI: Calculate RNA degradation index from raw RNA-seq data
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Zixuan", "Xie", email = "zixuan.xie@crownbio.com", role = c("aut", "cre")),
+    person("Wubin", "Qian", role = "ctb"),
+    person("Crown Bioscience", role = c("fnd")))
+Description: The RDI package offers users an efficient and cost-effective solution to estimate the quality of their RNA samples, in terms of degradation levels. This estimation relies on the differentiation in degradation degrees between the two terminals of mRNAs.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+onLoad: source("R/install.R")
