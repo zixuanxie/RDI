@@ -1,6 +1,6 @@
 Package: RDI
 Title: RDI: Calculate RNA degradation index from raw RNA-seq data
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: c(
     person("Zixuan", "Xie", email = "zixuan.xie@crownbio.com", role = c("aut", "cre")),
     person("Wubin", "Qian", role = "ctb"),
