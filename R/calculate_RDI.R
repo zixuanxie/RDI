@@ -10,23 +10,62 @@
 #' calculate_RDI(fq_file1, fq_file2, index_path, num_threads, output_dir)
 #' @export
 calculate_RDI <- function(fq_file1, fq_file2, index_path, num_threads, output_dir) {
-  package_root <- system.file(package = "RDI")
-
-  if (Sys.info()['sysname'] == "Windows") {
-    command_kallisto <- paste(shQuote(file.path(package_root, "scripts/kallisto_windows-v0.46.1/kallisto.exe")), "quant -i", shQuote(index_path), "-o", shQuote(output_dir), "-b 100 -t", num_threads, shQuote(fq_file1), shQuote(fq_file2))
-    system(command_kallisto)
-  } else if (Sys.info()['sysname'] == "Linux") {
-    command_chmod <- paste("chmod +x", shQuote(file.path(package_root, "scripts/kallisto_linux-v0.46.1/kallisto")))
-    system(command_chmod)
-    command_kallisto <- paste(shQuote(file.path(package_root, "scripts/kallisto_linux-v0.46.1/kallisto")), "quant -i", shQuote(index_path), "-o", shQuote(output_dir), "-b 100 -t", num_threads, shQuote(fq_file1), shQuote(fq_file2))
-    system(command_kallisto)
-  } else if (Sys.info()['sysname'] == "Darwin") {
-    command_chmod <- paste("chmod +x", shQuote(file.path(package_root, "scripts/kallisto_mac-v0.46.1/kallisto")))
-    system(command_chmod)
-    command_kallisto <- paste(shQuote(file.path(package_root, "scripts/kallisto_mac-v0.46.1/kallisto")), "quant -i", shQuote(index_path), "-o", shQuote(output_dir), "-b 100 -t", num_threads, shQuote(fq_file1), shQuote(fq_file2))
-    system(command_kallisto)
+  # Input validation
+  check_file_exists(fq_file1, "Fastq file 1")
+  check_file_exists(fq_file2, "Fastq file 2")
+  check_file_exists(index_path, "Kallisto index")
+  
+  if (!is.numeric(num_threads) || num_threads <= 0 || num_threads != as.integer(num_threads)) {
+    stop("Error: num_threads must be a positive integer")
   }
+  
+  # Create output directory if it doesn't exist
+  create_output_dir(output_dir)
+  
+  # Check if kallisto is installed
+  check_kallisto()
 
-  command_python <- paste("python", shQuote(file.path(package_root, "scripts/python/calculate_RDI.py")), "--input", shQuote(file.path(output_dir, "abundance.tsv")), "--output1", shQuote(file.path(output_dir, "transcripts_RDI.tsv")), "--output2", shQuote(file.path(output_dir, "RDI_sum.tsv")))
-  system(command_python)
+  package_root <- system.file(package = "RDI")
+  
+  # Get Python command
+  python_cmd <- get_python_command()
+  
+  # Get kallisto path
+  kallisto_path <- get_kallisto_path()
+  
+  tryCatch({
+    # Use kallisto (system-installed or embedded)
+    command_kallisto <- paste(shQuote(kallisto_path), "quant -i", shQuote(index_path), "-o", shQuote(output_dir), "-b 100 -t", num_threads, shQuote(fq_file1), shQuote(fq_file2))
+    run_command(command_kallisto, "Running kallisto quant")
+
+    # Check if abundance.tsv was generated
+    abundance_file <- file.path(output_dir, "abundance.tsv")
+    if (!file.exists(abundance_file)) {
+      stop("Error: kallisto did not generate abundance.tsv file")
+    }
+
+    command_python <- paste(python_cmd, shQuote(file.path(package_root, "scripts/python/calculate_RDI.py")), "--input", shQuote(abundance_file), "--output1", shQuote(file.path(output_dir, "transcripts_RDI.tsv")), "--output2", shQuote(file.path(output_dir, "RDI_sum.tsv")))
+    run_command(command_python, "Calculating RDI")
+
+    # Check if output files were generated
+    transcripts_rdi_file <- file.path(output_dir, "transcripts_RDI.tsv")
+    rdi_sum_file <- file.path(output_dir, "RDI_sum.tsv")
+    
+    if (!file.exists(transcripts_rdi_file)) {
+      warning("Warning: transcripts_RDI.tsv was not generated")
+    } else {
+      cat(paste("Generated:", transcripts_rdi_file, "\n"))
+    }
+    
+    if (!file.exists(rdi_sum_file)) {
+      warning("Warning: RDI_sum.tsv was not generated")
+    } else {
+      cat(paste("Generated:", rdi_sum_file, "\n"))
+    }
+    
+    cat("RDI calculation completed successfully!\n")
+    cat(paste("Results saved to:", output_dir, "\n"))
+  }, error = function(e) {
+    stop(paste("Error during RDI calculation:", e$message))
+  })
 }

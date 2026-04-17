@@ -4,6 +4,7 @@ import argparse
 import pandas as pd
 import numpy as np
 import math
+import os
 
 def process_expression_file(file_path):
     ratios = {}
@@ -74,7 +75,7 @@ def write_summary(output_file, data):
         median_value = data.median()
         std_dev_value = data.std()
         out_file.write(f'{data.name}\t{mean_value:.2f}\t{median_value:.2f}\t{std_dev_value:.2f}\n')
-        
+
 def main():
     # Create a command-line parser
     parser = argparse.ArgumentParser(description='Calculate RDI')
@@ -86,10 +87,19 @@ def main():
     # Parse the command-line arguments
     args = parser.parse_args()
     
-    ratios = process_expression_file(args.input)
+    # Normalize paths for cross-platform compatibility
+    input_file = os.path.normpath(args.input)
+    output1_file = os.path.normpath(args.output1)
+    output2_file = os.path.normpath(args.output2)
+    
+    # Create output directories if they don't exist
+    os.makedirs(os.path.dirname(output1_file), exist_ok=True)
+    os.makedirs(os.path.dirname(output2_file), exist_ok=True)
+    
+    ratios = process_expression_file(input_file)
     data = process_summary(ratios)
-    write_output_RDI(args.output1, ratios)
-    write_summary(args.output2, data['est_counts_ratio'])
+    write_output_RDI(output1_file, ratios)
+    write_summary(output2_file, data['est_counts_ratio'])
 
 
 if __name__ == "__main__":

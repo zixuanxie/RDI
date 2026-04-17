@@ -1,28 +1,15 @@
 ---
-title: "RDI: 
-RNA Degradation Index"
+title: "RDI: RNA Degradation Index"
 author:
 - name: Zixuan Xie
-  affiliation: Crown Bioscience Inc., Suzhou, Jiangsu, P.R. China
-- name: Yanghui Sheng
-  affiliation: Crown Bioscience Inc., Suzhou, Jiangsu, P.R. China
-- name: Wubin Qian
-  affiliation: Crown Bioscience Inc., Suzhou, Jiangsu, P.R. China
-- name: Shijia Wang
-  affiliation: Crown Bioscience Inc., Suzhou, Jiangsu, P.R. China
-- name: Mengting Qin
-  affiliation: Crown Bioscience Inc., Suzhou, Jiangsu, P.R. China
-- name: Xiaobo Chen
-  affiliation: Crown Bioscience Inc., Suzhou, Jiangsu, P.R. China
-- name: Sheng Guo
   affiliation: Crown Bioscience Inc., Suzhou, Jiangsu, P.R. China
 date: "`r Sys.Date()`"
 package: "RDI"
 output:
   BiocStyle::html_document:
-    toc_float: true
+    toc: true
+    number_sections: true
 link-citations: yes
-bibliography: bibliography.bib
 abstract: |
   RNA degradation affects RNA sequencing (RNA-seq) data integrity and complicates transcriptomic 
   analysis. This study introduces the RNA Degradation Index (RDI), a novel measure to improve RNA 
@@ -37,14 +24,18 @@ abstract: |
   than gene-level studies. RDI's robustness and efficiency make it a valuable addition to RNA-seq data 
   analytical pipelines, helping avoid biased results from degraded samples. 
 vignette: |
+  %\VignetteEncoding{UTF-8}
   %\VignetteIndexEntry{RDI: RNA Degradation Index}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
+
 ```{r setup, include = FALSE}
 options(timeout = Inf)
 knitr::opts_chunk$set(
-  eval = TRUE,
+  eval = FALSE,
   message = FALSE,
   warning = FALSE,
   tidy = FALSE,
@@ -52,280 +43,271 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Introduction   
-RNA degradation affects RNA sequencing (RNA-seq) data integrity and complicates transcriptomic 
-analysis. This study introduces the RNA Degradation Index (RDI), a novel measure to improve RNA 
-degradation assessment, addressing limitations of existing indices like the biased Ribosomal 
-Integrity Number (RIN) and the computationally expensive Transcript Integrity Number (TIN). 
-Leveraging on the pseudoaligner kallisto, RDI assesses RNA integrity based on the mapping depth at 
-both ends of transcripts to derive a median quality score for an RNA sample. Evaluations using mouse 
-syngeneic tumor models and public RNA-seq datasets show that RDI can evaluate RNA-seq data quality in
-an average of 8 minutes, much faster than TIN's 200 minutes, while achieving high accuracy (Spearman 
-correlation with TIN = 0.83). Application of RDI to real research data revealed that about 25% of 
-RNA-seq datasets had marked RNA degradation, which impacts transcript-level studies more severely 
-than gene-level studies. RDI's robustness and efficiency make it a valuable addition to RNA-seq data 
-analytical pipelines, helping avoid biased results from degraded samples. 
+# Introduction
 
+RNA degradation affects RNA sequencing (RNA-seq) data integrity and
+complicates transcriptomic analysis. This study introduces the RNA
+Degradation Index (RDI), a novel measure to improve RNA degradation
+assessment, addressing limitations of existing indices like the biased
+Ribosomal Integrity Number (RIN) and the computationally expensive
+Transcript Integrity Number (TIN). Leveraging on the pseudoaligner
+kallisto, RDI assesses RNA integrity based on the mapping depth at both
+ends of transcripts to derive a median quality score for an RNA sample.
+
+RDI works by: 1. Splitting transcript sequences into 5' and 3' regions
+2. Creating a kallisto index from these split sequences 3. Quantifying
+RNA-seq reads against this index 4. Calculating the ratio of 3' to 5'
+coverage for each transcript 5. Deriving a sample-level RDI score based
+on these ratios
 
 # Installation
-RDI can be installed from the latest release [RDIv1.0.0](https://github.com/zixuanxie/RDI/archive/refs/tags/RDIv1.0.0.tar.gz):
-```{r load_package, eval = TRUE}
-install.packages("RDI_0.0.0.9000.tar.gz",repo=NULL,type="source")
+
+## Prerequisites
+
+Before installing RDI, you need to have the following dependencies
+installed:
+
+1.  **kallisto**: A program for quantifying abundances of transcripts
+    from RNA-seq data
+    -   Download from: <https://pachterlab.github.io/kallisto/>
+    -   Ensure kallisto is in your system PATH
+2.  **Python 3**: Required for running the helper scripts
+    -   Python 3.6 or higher is recommended
+    -   Required Python packages: `argparse`, `pandas`, `numpy`
+
+## Installing RDI
+
+You can install RDI from the source package:
+
+```{r install_rdi}
+# Install from local source
+install.packages("RDI_0.0.0.9000.tar.gz", repo=NULL, type="source")
+
+# Or install from GitHub (if available)
+# devtools::install_github("zixuanxie/RDI")
 ```
 
-# How to run RDI   
-First, load the required packages, including RDI. Then users can 
-perform a step-by-step analysis of the RNAseq data's quality as below, 
-using the two wrapper functions, create_index and calculate_RDI. 
- 
+After installation, load the package:
 
-```{r load_package, eval = TRUE}
-suppressPackageStartupMessages({
-  library("CleanUpRNAseq")
-  #devtools::load_all("../../CleanUpRNAseq")
-  library("ggplotify")
-  library("patchwork")
-  library("ensembldb")
-  library("utils")
-})
+```{r load_rdi}
+library(RDI)
 ```
 
-## Step 1: Load an EnsDb package or prepare an EnsDb database     
-Users can list all current EnsDb packages from `r Biocpkg("AnnotationHub")` and 
-load the package of choice, if available, as follows. Here, an EnsDb package
-for the human genome is loaded. It is crucial to use an EnsDb pacakge which
-represents the genome annotation file (GTF) used for RNA-seq read alignment.
+# Quick Start Guide
 
-```{r load_ensdb, eval=FALSE}
-suppressPackageStartupMessages({
-  library("EnsDb.Hsapiens.v86")
-})
-hs_ensdb_sqlite <- EnsDb.Hsapiens.v86
+## Step 1: Create a kallisto index
+
+First, you need to create a kallisto index from a reference
+transcriptome fasta file. This step splits each transcript into 5' and
+3' regions and creates an index for kallisto.
+
+```{r create_index}
+# Path to reference transcriptome fasta file
+fasta_file <- "/path/to/reference_transcriptome.fa"
+
+# Output prefix for the index
+output_prefix <- "/path/to/output/index"
+
+# Create the index
+create_index(fasta_file, output_prefix)
 ```
 
-Otherwise, users can easily prepare an EnsDb database from an Ensembl GTF file.
-For all following steps, this option is adopted because the latest version of
-human transcriptome has been used for read mapping by STAR and Salmon to 
-quantify gene expression of the example RNA-seq data.
+This will generate two files: - `output_prefix.fa`: The split
+transcriptome fasta file - `output_prefix.idx`: The kallisto index file
 
-```{r create_ensdb}
-options(timeout = max(3000, getOption("timeout")))
-tmp_dir <- tempdir()
-gtf <- system.file("extdata", "example.gtf.gz",
-                   package = "CleanUpRNAseq")
+## Step 2: Calculate RDI
 
-hs_ensdb_sqlite <-
-  ensDbFromGtf(
-    gtf = gtf,
-    outfile = file.path(tmp_dir, "EnsDb.hs.v110.sqlite"),
-    organism = "Homo_Sapiens",
-    genomeVersion = "GRCh38",
-    version = 110
-  )
+Once you have the index, you can calculate RDI for your RNA-seq samples:
+
+```{r calculate_rdi}
+# Paths to paired-end RNA-seq fastq files
+fq_file1 <- "/path/to/sample_R1.fq.gz"
+fq_file2 <- "/path/to/sample_R2.fq.gz"
+
+# Path to the kallisto index created in Step 1
+index_path <- "/path/to/output/index.idx"
+
+# Number of threads to use
+num_threads <- 4
+
+# Output directory for results
+output_dir <- "/path/to/output/rdi_results"
+
+# Calculate RDI
+calculate_RDI(fq_file1, fq_file2, index_path, num_threads, output_dir)
 ```
 
-## Step 2. Prepare SAF (simplified annotation format) files 
-Potential DNA contamination exists if a significantly high portion of RNA-seq 
-reads mapped to intergenic regions. `r Biocpkg("CleanUpRNAseq")` uses the 
-*featureCounts* function from the `r Biocpkg("Rsubread")` package to 
-quantify the percentage of reads mapped to different genomic features: genes,
-exons, introns, intergenic regions, rRNA exons, and organelle genome(s). So 
-users need to prepare SAF files for these genomic features. In addition, 
-a BAM file is needed to provide the lengths of the chromosomes/scaffolds.
+This will generate three files in the output directory: -
+`abundance.tsv`: kallisto quantification results -
+`transcripts_RDI.tsv`: RDI values for each transcript - `RDI_sum.tsv`:
+Summary RDI values for the sample
 
-```{r prepare_saf}
-bam_file <- system.file("extdata", "K084CD7PCD1N.srt.bam",
-                        package = "CleanUpRNAseq"
+# Interpreting Results
+
+## Transcript-level RDI
+
+The `transcripts_RDI.tsv` file contains: - `transcript_id`: The ID of
+the transcript - `est_counts_ratio`: The ratio of 3' to 5' coverage
+(values closer to 0 indicate more degradation) - `degradation_mode`: The
+direction of degradation ("from3", "from5", "fromBoth", or "both0")
+
+## Sample-level RDI
+
+The `RDI_sum.tsv` file contains: - `transcript_id`: Set to
+"est_counts_ratio" (placeholder) - `Index(mean)`: The mean RDI across
+all transcripts - `Index(median)`: The median RDI across all transcripts
+(this is the main RDI score) - `Index(stdev)`: The standard deviation of
+RDI values across transcripts
+
+### RDI Score Interpretation
+
+-   **RDI ≈ 1**: Minimal degradation (3' and 5' coverage are balanced)
+-   **RDI \< 1**: RNA degradation (3' coverage is higher than 5'
+    coverage)
+-   **RDI \> 1**: Unusual pattern (5' coverage is higher than 3'
+    coverage)
+
+Generally, samples with RDI \< 0.8 are considered to have significant
+degradation.
+
+# Example Workflow
+
+Here's a complete example workflow for calculating RDI for multiple
+samples:
+
+```{r example_workflow}
+# Set paths
+reference_fasta <- "/path/to/human_transcriptome.fa"
+index_prefix <- "/path/to/output/human_index"
+samples <- list(
+  sample1 = c("/path/to/sample1_R1.fq.gz", "/path/to/sample1_R2.fq.gz"),
+  sample2 = c("/path/to/sample2_R1.fq.gz", "/path/to/sample2_R2.fq.gz"),
+  sample3 = c("/path/to/sample3_R1.fq.gz", "/path/to/sample3_R2.fq.gz")
 )
-saf_list <- get_saf(
-  ensdb_sqlite = hs_ensdb_sqlite,
-  bamfile = bam_file,
-  mitochondrial_genome = "MT"
-)
-```
-## Step 3. Summarize reads mapped to different genomic features  
-Reads mapped to different genomic features is summarized by using the
-*featureCounts* function with the SAF files generated above as annotation.
-`r Biocpkg("CleanUpRNAseq")` also quantifies the reads spanning exon-exon 
-junctions and the reads mapped to exons of each gene using the GTF file as 
-annotation. The junction read count table is used to determine the unexpressed, 
-multiexonic genes, while the gene-level read count table is used for comparing
-samples at the gene level. Here two downsampled BAM files are used for speeding
-up the demonstration, while a precomputed R object in the .RData format is 
-used for actual downstream analysis.
+output_base <- "/path/to/output/rdi_results"
 
-```{r load_data}
-tmp_dir <- tempdir()
-in_dir <- system.file("extdata", package = "CleanUpRNAseq")
-gtf.gz <- dir(in_dir, ".gtf.gz$", full.name = TRUE)
-gtf <- file.path(tmp_dir, gsub("\\.gz", "", basename(gtf.gz)))
-R.utils::gunzip(gtf.gz, destname= gtf,
-                overwrite = TRUE, remove = FALSE)
+# Create index (only need to do this once)
+create_index(reference_fasta, index_prefix)
+index_path <- paste0(index_prefix, ".idx")
 
-in_dir <- system.file("extdata", package = "CleanUpRNAseq")
-BAM_file <- dir(in_dir, ".bam$", full.name = TRUE)
-salmon_quant_file <- dir(in_dir, ".sf$", full.name = TRUE)
-sample_name = gsub(".+/(.+?).srt.bam", "\\1", BAM_file)
-salmon_quant_file_opposite_strand <- salmon_quant_file
-col_data <- data.frame(sample_name = sample_name,
-                       BAM_file = BAM_file,
-                       salmon_quant_file = salmon_quant_file,
-                       salmon_quant_file_opposite_strand =
-                         salmon_quant_file_opposite_strand,
-                       group = c("CD1N", "CD1P"))
+# Calculate RDI for each sample
+for (sample_name in names(samples)) {
+  cat(paste("Processing sample:", sample_name, "\n"))
+  fq1 <- samples[[sample_name]][1]
+  fq2 <- samples[[sample_name]][2]
+  output_dir <- file.path(output_base, sample_name)
+  
+  calculate_RDI(fq1, fq2, index_path, 4, output_dir)
+}
 
-sc <- create_summarizedcounts(lib_strand = 0, colData = col_data)
+# Collect and summarize results
+results <- list()
+for (sample_name in names(samples)) {
+  rdi_file <- file.path(output_base, sample_name, "RDI_sum.tsv")
+  if (file.exists(rdi_file)) {
+    rdi_data <- read.table(rdi_file, header = TRUE, sep = "\t")
+    results[[sample_name]] <- rdi_data$Index.median.
+  }
+}
 
-## featurecounts 
-capture.output({counts_list <- summarize_reads(
-  SummarizedCounts = sc,
-  saf_list = saf_list,
-  gtf = gtf,
-  threads = 1,
-  verbose = TRUE
-)}, file = tempfile())
-
-## load salmon quant 
-salmon_counts <- salmon_tximport(
-  SummarizedCounts = sc,
-  ensdb_sqlite = hs_ensdb_sqlite
+# Create summary table
+summary_table <- data.frame(
+  sample = names(results),
+  RDI = unlist(results)
 )
 
+print(summary_table)
 ```
 
-## Step 4. Check DNA contamination  
-Precomputed R object in the .RData format (*feature_counts_list.rda*, and
-*salmon_quant.rda*) 
-containing the *featureCounts* output and *Salmon quantification* output
-imported by using the `tximport` function for a RNA-seq dataset of 8 samples
-from two treatment groups are used for demo. GC-content for genes and
-intergenic regions (*intergenic_GC.rda*, and *gene_GC.rda*) were also
-precomputed and used for demo.
+# Test Code
 
-```{r plot_assignment_stat} 
-#| mappingstat, fig.height = 6, fig.width = 6, 
-#| fig.cap = "Read mapping status"
-data("feature_counts_list")
-data("salmon_quant")
-data("intergenic_GC")
-data("gene_GC")
+The RDI package includes test data and test functions to verify that the
+package is working correctly. Here's how to run the tests:
 
-lib_strand <- 0
-col_data_f <- system.file("extdata", "example.colData.txt",
-                          package = "CleanUpRNAseq")
-col_data <- read.delim(col_data_f, as.is = TRUE)
-## create fake bam files
-tmp_dir <- tempdir()
-bamfiles <- gsub(".+/", "", col_data$BAM_file)
-null <- lapply(file.path(tmp_dir, bamfiles), file.create)
-## create fake quant.sf files
-quant_sf <- file.path(tmp_dir, gsub(".srt.bam$",
-                                    "quant.sf",
-                                    bamfiles))
-null <- lapply(quant_sf, file.create)
-col_data$BAM_file <- file.path(tmp_dir, bamfiles)
-col_data$salmon_quant_file <- quant_sf
+## Test Data
 
-## pretend this is stranded RA=NA-seq data
-col_data$salmon_quant_file_opposite_strand <- quant_sf
+The package includes the following test files in the `extdata`
+directory: - `test.fasta`: A small test reference transcriptome -
+`test_1.fq.gz`: Test RNA-seq reads (forward) - `test_2.fq.gz`: Test
+RNA-seq reads (reverse)
 
-sc <- create_summarizedcounts(lib_strand, col_data)
-sc$set_feature_counts(feature_counts_list)
-sc$set_salmon_quant(salmon_quant)
-sc$set_salmon_quant_opposite(salmon_quant)
+## Running Tests
 
-p_assignment_stat <-plot_assignment_stat(SummarizedCounts = sc)
-wrap_plots(p_assignment_stat)
+You can run the tests using the `testthat` package:
+
+``` r
+# Install testthat if not already installed
+# install.packages("testthat")
+
+# Run tests from the source directory (when developing)
+library(testthat)
+# If running from the source directory
+test_dir("tests")
+
+# If running from the installed package (after installation with tests)
+# test_dir(system.file("tests", package = "RDI"))
 ```
 
-```{r} 
-#| readdistr, fig.height = 4, fig.width = 5, 
-#| fig.cap = "Read distribution over different genomic features"
-assigned_per_region <- get_region_stat(SummarizedCounts = sc)
-p <- plot_read_distr(assigned_per_region)
-p
+## Test Commands
 
+You can also run the test commands manually to verify the functionality:
+
+``` r
+# Set paths to test data
+test_data_dir <- system.file("extdata", package = "RDI")
+fasta_file <- file.path(test_data_dir, "test.fasta")
+fq_file1 <- file.path(test_data_dir, "test_1.fq.gz")
+fq_file2 <- file.path(test_data_dir, "test_2.fq.gz")
+
+# Create output directory
+output_dir <- tempdir()
+index_prefix <- file.path(output_dir, "test_index")
+
+# Test create_index function
+cat("Testing create_index...\n")
+create_index(fasta_file, index_prefix)
+
+# Test calculate_RDI function
+cat("Testing calculate_RDI...\n")
+index_path <- paste0(index_prefix, ".idx")
+rdi_output_dir <- file.path(output_dir, "rdi_test")
+calculate_RDI(fq_file1, fq_file2, index_path, 1, rdi_output_dir)
+
+# Check results
+cat("Checking test results...\n")
+rdi_sum_file <- file.path(rdi_output_dir, "RDI_sum.tsv")
+if (file.exists(rdi_sum_file)) {
+  rdi_result <- read.table(rdi_sum_file, header = TRUE, sep = "\t")
+  cat("RDI test result:", rdi_result$Index.median., "\n")
+} else {
+  cat("Test failed: RDI_sum.tsv not found\n")
+}
 ```
 
-```{r plot_sample_corr} 
-#| samplecorr, fig.height = 8, fig.width = 8,
-#| fig.cap = "Smoothed scatter plot showing pairwise sample correlation"
-plot_sample_corr(SummarizedCounts = sc)
-```
+# Troubleshooting
 
+## Common Issues
 
-```{r plot_read_distr} 
-#| exprdistr, fig.height = 8, fig.width = 5, 
-#| fig.cap = "Expression distribution"
-p_expr_distr <- plot_expr_distr(
-  SummarizedCounts = sc,
-  normalization = "DESeq2"
-)
-wrap_plots(p_expr_distr, ncol = 1, nrow = 3)
-```
+1.  **kallisto not found**: Ensure kallisto is installed and in your
+    system PATH
+2.  **Python not found**: Ensure Python 3 is installed and in your
+    system PATH
+3.  **Missing Python packages**: The install script should automatically
+    install required packages, but you can install them manually with
+    `pip install pandas numpy`
+4.  **File not found errors**: Double-check all file paths
+5.  **Permission errors**: Ensure you have write access to the output
+    directories
 
-```{r percent_expressed_gene}
-#| exprgene, fig.height = 3, fig.width = 3.5, out.width = "80%", 
-#| fig.cap = "Percent of expressed genes"
+## Debugging Tips
 
-plot_gene_content(
-  SummarizedCounts = sc,
-  min_cpm = 1,
-  min_tpm =1
-)
-```
+-   Run with verbose output to see detailed progress
+-   Check the output files to ensure they're being generated correctly
+-   Verify that kallisto and Python are working correctly by running
+    `kallisto --version` and `python --version` in your terminal
 
+# Session Information
 
-```{r pca_heatmap}
-#| samplesimilarity, fig.height = 5, fig.width = 10,
-#| fig.cap = "PCA score plot and heatmap showing sample similarity"
-
-## DESeq2 exploratory analysis before correction
-p<- plot_pca_heatmap(SummarizedCounts = sc,
-                     silent = TRUE)
-p$pca + as.ggplot(p$heatmap)
-```
-
-## Step 5. Correct for DNA contamination
-If the libraries are unstranded, `r Biocpkg("CleanUpRNAseq")` uses a median 
-per-base read coverage (median_PBRC) over non-zero count intergenic
-regions to estimate per-base DNA contamination over exons of each gene of each 
-sample, and corrects for gene-level DNA contamination by subtracting 
-median_PBRC * average_gene_length from the Salmon count table of each gene of
-each sample. 
-```{r global_correction}
-global_correction <- correct_global(SummarizedCounts = sc)
-```
-
-Alternatively, for unstranded RNA-seq data, `r Biocpkg("CleanUpRNAseq")` offers
-a correction method leveraging GC-content bias on PCR amplification.
-```{r GC_correction}
-gc_correction <-
-  correct_GC(
-    SummarizedCounts = sc,
-    gene_gc = gene_GC,
-    intergenic_gc = intergenic_GC,
-    plot = FALSE
-  )
-```
-However, if the libraries are stranded, `r Biocpkg("CleanUpRNAseq")` considered 
-as gene-level contamination the count table resulted from quantitation using the
-opposite strandedness setting. By subtracting the DNA contamination of each gene 
-in each sample from the count table resulted from quantitation using the actual 
-strandedness setting, users can get contamination corrected count table. To this
-end, use the `correct_stranded` function.
-
-
-## Step 6. Check correction effect
-After correcting for DNA contamination, we expect to see more comparable gene 
-expression across samples.  
-
-Boxplots, density plots and empirical cumulative distribution after correction
-revealed gene expression across samples are more comparable.
-
-# Session info
-Here is the output of `sessionInfo()` on the system on which this document was 
-compiled running pandoc `r rmarkdown::pandoc_version()`:
-```{r sessionInfo, eval=TRUE, echo = FALSE}
+```{r session_info, eval=TRUE}
 sessionInfo()
 ```

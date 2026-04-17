@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import random
 import argparse
+import os
 
 def read_fasta(file_path):
     sequences = {}
@@ -57,9 +58,16 @@ def main():
     # Parse the command-line arguments
     args = parser.parse_args()
     
-    seqs = read_fasta(args.input)
+    # Normalize paths for cross-platform compatibility
+    input_file = os.path.normpath(args.input)
+    output_file = os.path.normpath(args.output)
+    
+    # Create output directory if it doesn't exist
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+    
+    seqs = read_fasta(input_file)
     split_seqs = split_sequences(seqs)
-    write_fasta(args.output, split_seqs)
+    write_fasta(output_file, split_seqs)
 
     
 if __name__ == "__main__":
