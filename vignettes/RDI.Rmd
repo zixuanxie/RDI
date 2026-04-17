@@ -81,7 +81,7 @@ You can install RDI from the source package:
 
 ```{r install_rdi}
 # Install from local source
-install.packages("RDI-1.0.1.tar.gz", repo=NULL, type="source")
+install.packages("RDI-RDIv1.0.0.tar.gz",repo=NULL,type="source")
 
 # Or install from GitHub (if available)
 devtools::install_github("zixuanxie/RDI")
@@ -91,6 +91,71 @@ After installation, load the package:
 
 ```{r load_rdi}
 library(RDI)
+```
+
+# Test Code
+
+The RDI package includes test data and test functions to verify that the
+package is working correctly. Here's how to run the tests:
+
+## Test Data
+
+The package includes the following test files in the `extdata`
+directory: - `test.fasta`: A small test reference transcriptome -
+`test_1.fq.gz`: Test RNA-seq reads (forward) - `test_2.fq.gz`: Test
+RNA-seq reads (reverse)
+
+## Running Tests
+
+You can run the tests using the `testthat` package:
+
+```{r testthat}
+# Install testthat if not already installed
+# install.packages("testthat")
+
+# Run tests from the source directory (when developing)
+library(testthat)
+# If running from the source directory
+test_dir("tests")
+
+# If running from the installed package (after installation with tests)
+# test_dir(system.file("tests", package = "RDI"))
+```
+
+## Test Commands
+
+You can also run the test commands manually to verify the functionality:
+
+```{r test_commands}
+# Set paths to test data
+test_data_dir <- system.file("extdata", package = "RDI")
+fasta_file <- file.path(test_data_dir, "test.fasta")
+fq_file1 <- file.path(test_data_dir, "test_1.fq.gz")
+fq_file2 <- file.path(test_data_dir, "test_2.fq.gz")
+
+# Create output directory
+output_dir <- tempdir()
+index_prefix <- file.path(output_dir, "test_index")
+
+# Test create_index function
+cat("Testing create_index...\n")
+create_index(fasta_file, index_prefix)
+
+# Test calculate_RDI function
+cat("Testing calculate_RDI...\n")
+index_path <- paste0(index_prefix, ".idx")
+rdi_output_dir <- file.path(output_dir, "rdi_test")
+calculate_RDI(fq_file1, fq_file2, index_path, 1, rdi_output_dir)
+
+# Check results
+cat("Checking test results...\n")
+rdi_sum_file <- file.path(rdi_output_dir, "RDI_sum.tsv")
+if (file.exists(rdi_sum_file)) {
+  rdi_result <- read.table(rdi_sum_file, header = TRUE, sep = "\t")
+  cat("RDI test result:", rdi_result$Index.median., "\n")
+} else {
+  cat("Test failed: RDI_sum.tsv not found\n")
+}
 ```
 
 # Quick Start Guide
@@ -112,8 +177,10 @@ output_prefix <- "/path/to/output/index"
 create_index(fasta_file, output_prefix)
 ```
 
-This will generate two files: - `output_prefix.fa`: The split
-transcriptome fasta file - `output_prefix.idx`: The kallisto index file
+This will generate two files: 
+
+-   `output_prefix.fa`: The split transcriptome fasta file 
+-   `output_prefix.idx`: The kallisto index file
 
 ## Step 2: Calculate RDI
 
@@ -137,27 +204,33 @@ output_dir <- "/path/to/output/rdi_results"
 calculate_RDI(fq_file1, fq_file2, index_path, num_threads, output_dir)
 ```
 
-This will generate three files in the output directory: -
-`abundance.tsv`: kallisto quantification results -
-`transcripts_RDI.tsv`: RDI values for each transcript - `RDI_sum.tsv`:
-Summary RDI values for the sample
+This will generate three files in the output directory: 
+
+-   `abundance.tsv`: kallisto quantification results 
+-   `transcripts_RDI.tsv`: RDI values for each transcript 
+-   `RDI_sum.tsv`: Summary RDI values for the sample
 
 # Interpreting Results
 
 ## Transcript-level RDI
 
-The `transcripts_RDI.tsv` file contains: - `transcript_id`: The ID of
-the transcript - `est_counts_ratio`: The ratio of 3' to 5' coverage
-(values closer to 0 indicate more degradation) - `degradation_mode`: The
-direction of degradation ("from3", "from5", "fromBoth", or "both0")
+The `transcripts_RDI.tsv` file contains: 
+
+-   `transcript_id`: The ID of the transcript 
+-   `est_counts_ratio`: The ratio of 3' to 5' coverage (values closer to 
+  0 indicate more degradation) 
+-   `degradation_mode`: The direction of degradation ("from3", "from5", 
+  "fromBoth", or "both0")
 
 ## Sample-level RDI
 
-The `RDI_sum.tsv` file contains: - `transcript_id`: Set to
-"est_counts_ratio" (placeholder) - `Index(mean)`: The mean RDI across
-all transcripts - `Index(median)`: The median RDI across all transcripts
-(this is the main RDI score) - `Index(stdev)`: The standard deviation of
-RDI values across transcripts
+The `RDI_sum.tsv` file contains: 
+
+-   `transcript_id`: Set to "est_counts_ratio" (placeholder) 
+-   `Index(mean)`: The mean RDI across all transcripts 
+-   `Index(median)`: The median RDI across all transcripts (this is the 
+  main RDI score) 
+-   `Index(stdev)`: The standard deviation of RDI values across transcripts
 
 ### RDI Score Interpretation
 
@@ -219,70 +292,6 @@ summary_table <- data.frame(
 print(summary_table)
 ```
 
-# Test Code
-
-The RDI package includes test data and test functions to verify that the
-package is working correctly. Here's how to run the tests:
-
-## Test Data
-
-The package includes the following test files in the `extdata`
-directory: - `test.fasta`: A small test reference transcriptome -
-`test_1.fq.gz`: Test RNA-seq reads (forward) - `test_2.fq.gz`: Test
-RNA-seq reads (reverse)
-
-## Running Tests
-
-You can run the tests using the `testthat` package:
-
-``` r
-# Install testthat if not already installed
-# install.packages("testthat")
-
-# Run tests from the source directory (when developing)
-library(testthat)
-# If running from the source directory
-test_dir("tests")
-
-# If running from the installed package (after installation with tests)
-# test_dir(system.file("tests", package = "RDI"))
-```
-
-## Test Commands
-
-You can also run the test commands manually to verify the functionality:
-
-``` r
-# Set paths to test data
-test_data_dir <- system.file("extdata", package = "RDI")
-fasta_file <- file.path(test_data_dir, "test.fasta")
-fq_file1 <- file.path(test_data_dir, "test_1.fq.gz")
-fq_file2 <- file.path(test_data_dir, "test_2.fq.gz")
-
-# Create output directory
-output_dir <- tempdir()
-index_prefix <- file.path(output_dir, "test_index")
-
-# Test create_index function
-cat("Testing create_index...\n")
-create_index(fasta_file, index_prefix)
-
-# Test calculate_RDI function
-cat("Testing calculate_RDI...\n")
-index_path <- paste0(index_prefix, ".idx")
-rdi_output_dir <- file.path(output_dir, "rdi_test")
-calculate_RDI(fq_file1, fq_file2, index_path, 1, rdi_output_dir)
-
-# Check results
-cat("Checking test results...\n")
-rdi_sum_file <- file.path(rdi_output_dir, "RDI_sum.tsv")
-if (file.exists(rdi_sum_file)) {
-  rdi_result <- read.table(rdi_sum_file, header = TRUE, sep = "\t")
-  cat("RDI test result:", rdi_result$Index.median., "\n")
-} else {
-  cat("Test failed: RDI_sum.tsv not found\n")
-}
-```
 
 # Troubleshooting
 

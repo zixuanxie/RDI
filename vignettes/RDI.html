@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2026-04-15" />
+<meta name="date" content="2026-04-17" />
 
 <title>RDI: RNA Degradation Index</title>
 
@@ -713,7 +713,7 @@ function toggle_visibility(id1) {
 <h1 class="title toc-ignore">RDI: RNA Degradation Index</h1>
 <p class="author-name">Zixuan Xie<span class="affil-mark">1</span></p>
 <p class="author-affiliation"><span class="affil-mark">1</span>Crown Bioscience Inc., Suzhou, Jiangsu, P.R. China</p>
-<h4 class="date">2026-04-15</h4>
+<h4 class="date">2026-04-17</h4>
 <h4 class="abstract">Abstract</h4>
 <p>RNA degradation affects RNA sequencing (RNA-seq) data integrity and complicates transcriptomic
 analysis. This study introduces the RNA Degradation Index (RDI), a novel measure to improve RNA
@@ -728,7 +728,7 @@ RNA-seq datasets had marked RNA degradation, which impacts transcript-level stud
 than gene-level studies. RDI’s robustness and efficiency make it a valuable addition to RNA-seq data
 analytical pipelines, helping avoid biased results from degraded samples.</p>
 <h4 class="package">Package</h4>
-<p>RDI 0.0.0.9000</p>
+<p>RDI 1.0.1</p>
 
 </div>
 
@@ -741,26 +741,26 @@ analytical pipelines, helping avoid biased results from degraded samples.</p>
 <li><a href="#prerequisites" id="toc-prerequisites"><span class="toc-section-number">2.1</span> Prerequisites</a></li>
 <li><a href="#installing-rdi" id="toc-installing-rdi"><span class="toc-section-number">2.2</span> Installing RDI</a></li>
 </ul></li>
-<li><a href="#quick-start-guide" id="toc-quick-start-guide"><span class="toc-section-number">3</span> Quick Start Guide</a>
+<li><a href="#test-code" id="toc-test-code"><span class="toc-section-number">3</span> Test Code</a>
 <ul>
-<li><a href="#step-1-create-a-kallisto-index" id="toc-step-1-create-a-kallisto-index"><span class="toc-section-number">3.1</span> Step 1: Create a kallisto index</a></li>
-<li><a href="#step-2-calculate-rdi" id="toc-step-2-calculate-rdi"><span class="toc-section-number">3.2</span> Step 2: Calculate RDI</a></li>
+<li><a href="#test-data" id="toc-test-data"><span class="toc-section-number">3.1</span> Test Data</a></li>
+<li><a href="#running-tests" id="toc-running-tests"><span class="toc-section-number">3.2</span> Running Tests</a></li>
+<li><a href="#test-commands" id="toc-test-commands"><span class="toc-section-number">3.3</span> Test Commands</a></li>
 </ul></li>
-<li><a href="#interpreting-results" id="toc-interpreting-results"><span class="toc-section-number">4</span> Interpreting Results</a>
+<li><a href="#quick-start-guide" id="toc-quick-start-guide"><span class="toc-section-number">4</span> Quick Start Guide</a>
 <ul>
-<li><a href="#transcript-level-rdi" id="toc-transcript-level-rdi"><span class="toc-section-number">4.1</span> Transcript-level RDI</a></li>
-<li><a href="#sample-level-rdi" id="toc-sample-level-rdi"><span class="toc-section-number">4.2</span> Sample-level RDI</a>
+<li><a href="#step-1-create-a-kallisto-index" id="toc-step-1-create-a-kallisto-index"><span class="toc-section-number">4.1</span> Step 1: Create a kallisto index</a></li>
+<li><a href="#step-2-calculate-rdi" id="toc-step-2-calculate-rdi"><span class="toc-section-number">4.2</span> Step 2: Calculate RDI</a></li>
+</ul></li>
+<li><a href="#interpreting-results" id="toc-interpreting-results"><span class="toc-section-number">5</span> Interpreting Results</a>
 <ul>
-<li><a href="#rdi-score-interpretation" id="toc-rdi-score-interpretation"><span class="toc-section-number">4.2.1</span> RDI Score Interpretation</a></li>
-</ul></li>
-</ul></li>
-<li><a href="#example-workflow" id="toc-example-workflow"><span class="toc-section-number">5</span> Example Workflow</a></li>
-<li><a href="#test-code" id="toc-test-code"><span class="toc-section-number">6</span> Test Code</a>
+<li><a href="#transcript-level-rdi" id="toc-transcript-level-rdi"><span class="toc-section-number">5.1</span> Transcript-level RDI</a></li>
+<li><a href="#sample-level-rdi" id="toc-sample-level-rdi"><span class="toc-section-number">5.2</span> Sample-level RDI</a>
 <ul>
-<li><a href="#test-data" id="toc-test-data"><span class="toc-section-number">6.1</span> Test Data</a></li>
-<li><a href="#running-tests" id="toc-running-tests"><span class="toc-section-number">6.2</span> Running Tests</a></li>
-<li><a href="#test-commands" id="toc-test-commands"><span class="toc-section-number">6.3</span> Test Commands</a></li>
+<li><a href="#rdi-score-interpretation" id="toc-rdi-score-interpretation"><span class="toc-section-number">5.2.1</span> RDI Score Interpretation</a></li>
 </ul></li>
+</ul></li>
+<li><a href="#example-workflow" id="toc-example-workflow"><span class="toc-section-number">6</span> Example Workflow</a></li>
 <li><a href="#troubleshooting" id="toc-troubleshooting"><span class="toc-section-number">7</span> Troubleshooting</a>
 <ul>
 <li><a href="#common-issues" id="toc-common-issues"><span class="toc-section-number">7.1</span> Common Issues</a></li>
@@ -810,18 +810,77 @@ from RNA-seq data
 <h2><span class="header-section-number">2.2</span> Installing RDI</h2>
 <p>You can install RDI from the source package:</p>
 <pre class="r"><code># Install from local source
-install.packages(&quot;RDI_0.0.0.9000.tar.gz&quot;, repo=NULL, type=&quot;source&quot;)
+install.packages(&quot;RDI-RDIv1.0.0.tar.gz&quot;,repo=NULL,type=&quot;source&quot;)
 
 # Or install from GitHub (if available)
-# devtools::install_github(&quot;zixuanxie/RDI&quot;)</code></pre>
+devtools::install_github(&quot;zixuanxie/RDI&quot;)</code></pre>
 <p>After installation, load the package:</p>
 <pre class="r"><code>library(RDI)</code></pre>
 </div>
 </div>
-<div id="quick-start-guide" class="section level1" number="3">
-<h1><span class="header-section-number">3</span> Quick Start Guide</h1>
-<div id="step-1-create-a-kallisto-index" class="section level2" number="3.1">
-<h2><span class="header-section-number">3.1</span> Step 1: Create a kallisto index</h2>
+<div id="test-code" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Test Code</h1>
+<p>The RDI package includes test data and test functions to verify that the
+package is working correctly. Here’s how to run the tests:</p>
+<div id="test-data" class="section level2" number="3.1">
+<h2><span class="header-section-number">3.1</span> Test Data</h2>
+<p>The package includes the following test files in the <code>extdata</code>
+directory: - <code>test.fasta</code>: A small test reference transcriptome -
+<code>test_1.fq.gz</code>: Test RNA-seq reads (forward) - <code>test_2.fq.gz</code>: Test
+RNA-seq reads (reverse)</p>
+</div>
+<div id="running-tests" class="section level2" number="3.2">
+<h2><span class="header-section-number">3.2</span> Running Tests</h2>
+<p>You can run the tests using the <code>testthat</code> package:</p>
+<pre class="r"><code># Install testthat if not already installed
+# install.packages(&quot;testthat&quot;)
+
+# Run tests from the source directory (when developing)
+library(testthat)
+# If running from the source directory
+test_dir(&quot;tests&quot;)
+
+# If running from the installed package (after installation with tests)
+# test_dir(system.file(&quot;tests&quot;, package = &quot;RDI&quot;))</code></pre>
+</div>
+<div id="test-commands" class="section level2" number="3.3">
+<h2><span class="header-section-number">3.3</span> Test Commands</h2>
+<p>You can also run the test commands manually to verify the functionality:</p>
+<pre class="r"><code># Set paths to test data
+test_data_dir &lt;- system.file(&quot;extdata&quot;, package = &quot;RDI&quot;)
+fasta_file &lt;- file.path(test_data_dir, &quot;test.fasta&quot;)
+fq_file1 &lt;- file.path(test_data_dir, &quot;test_1.fq.gz&quot;)
+fq_file2 &lt;- file.path(test_data_dir, &quot;test_2.fq.gz&quot;)
+
+# Create output directory
+output_dir &lt;- tempdir()
+index_prefix &lt;- file.path(output_dir, &quot;test_index&quot;)
+
+# Test create_index function
+cat(&quot;Testing create_index...\n&quot;)
+create_index(fasta_file, index_prefix)
+
+# Test calculate_RDI function
+cat(&quot;Testing calculate_RDI...\n&quot;)
+index_path &lt;- paste0(index_prefix, &quot;.idx&quot;)
+rdi_output_dir &lt;- file.path(output_dir, &quot;rdi_test&quot;)
+calculate_RDI(fq_file1, fq_file2, index_path, 1, rdi_output_dir)
+
+# Check results
+cat(&quot;Checking test results...\n&quot;)
+rdi_sum_file &lt;- file.path(rdi_output_dir, &quot;RDI_sum.tsv&quot;)
+if (file.exists(rdi_sum_file)) {
+  rdi_result &lt;- read.table(rdi_sum_file, header = TRUE, sep = &quot;\t&quot;)
+  cat(&quot;RDI test result:&quot;, rdi_result$Index.median., &quot;\n&quot;)
+} else {
+  cat(&quot;Test failed: RDI_sum.tsv not found\n&quot;)
+}</code></pre>
+</div>
+</div>
+<div id="quick-start-guide" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> Quick Start Guide</h1>
+<div id="step-1-create-a-kallisto-index" class="section level2" number="4.1">
+<h2><span class="header-section-number">4.1</span> Step 1: Create a kallisto index</h2>
 <p>First, you need to create a kallisto index from a reference
 transcriptome fasta file. This step splits each transcript into 5’ and
 3’ regions and creates an index for kallisto.</p>
@@ -833,11 +892,14 @@ output_prefix &lt;- &quot;/path/to/output/index&quot;
 
 # Create the index
 create_index(fasta_file, output_prefix)</code></pre>
-<p>This will generate two files: - <code>output_prefix.fa</code>: The split
-transcriptome fasta file - <code>output_prefix.idx</code>: The kallisto index file</p>
+<p>This will generate two files:</p>
+<ul>
+<li><code>output_prefix.fa</code>: The split transcriptome fasta file</li>
+<li><code>output_prefix.idx</code>: The kallisto index file</li>
+</ul>
 </div>
-<div id="step-2-calculate-rdi" class="section level2" number="3.2">
-<h2><span class="header-section-number">3.2</span> Step 2: Calculate RDI</h2>
+<div id="step-2-calculate-rdi" class="section level2" number="4.2">
+<h2><span class="header-section-number">4.2</span> Step 2: Calculate RDI</h2>
 <p>Once you have the index, you can calculate RDI for your RNA-seq samples:</p>
 <pre class="r"><code># Paths to paired-end RNA-seq fastq files
 fq_file1 &lt;- &quot;/path/to/sample_R1.fq.gz&quot;
@@ -854,30 +916,39 @@ output_dir &lt;- &quot;/path/to/output/rdi_results&quot;
 
 # Calculate RDI
 calculate_RDI(fq_file1, fq_file2, index_path, num_threads, output_dir)</code></pre>
-<p>This will generate three files in the output directory: -
-<code>abundance.tsv</code>: kallisto quantification results -
-<code>transcripts_RDI.tsv</code>: RDI values for each transcript - <code>RDI_sum.tsv</code>:
-Summary RDI values for the sample</p>
+<p>This will generate three files in the output directory:</p>
+<ul>
+<li><code>abundance.tsv</code>: kallisto quantification results</li>
+<li><code>transcripts_RDI.tsv</code>: RDI values for each transcript</li>
+<li><code>RDI_sum.tsv</code>: Summary RDI values for the sample</li>
+</ul>
 </div>
 </div>
-<div id="interpreting-results" class="section level1" number="4">
-<h1><span class="header-section-number">4</span> Interpreting Results</h1>
-<div id="transcript-level-rdi" class="section level2" number="4.1">
-<h2><span class="header-section-number">4.1</span> Transcript-level RDI</h2>
-<p>The <code>transcripts_RDI.tsv</code> file contains: - <code>transcript_id</code>: The ID of
-the transcript - <code>est_counts_ratio</code>: The ratio of 3’ to 5’ coverage
-(values closer to 0 indicate more degradation) - <code>degradation_mode</code>: The
-direction of degradation (“from3”, “from5”, “fromBoth”, or “both0”)</p>
+<div id="interpreting-results" class="section level1" number="5">
+<h1><span class="header-section-number">5</span> Interpreting Results</h1>
+<div id="transcript-level-rdi" class="section level2" number="5.1">
+<h2><span class="header-section-number">5.1</span> Transcript-level RDI</h2>
+<p>The <code>transcripts_RDI.tsv</code> file contains:</p>
+<ul>
+<li><code>transcript_id</code>: The ID of the transcript</li>
+<li><code>est_counts_ratio</code>: The ratio of 3’ to 5’ coverage (values closer to
+0 indicate more degradation)</li>
+<li><code>degradation_mode</code>: The direction of degradation (“from3”, “from5”,
+“fromBoth”, or “both0”)</li>
+</ul>
 </div>
-<div id="sample-level-rdi" class="section level2" number="4.2">
-<h2><span class="header-section-number">4.2</span> Sample-level RDI</h2>
-<p>The <code>RDI_sum.tsv</code> file contains: - <code>transcript_id</code>: Set to
-“est_counts_ratio” (placeholder) - <code>Index(mean)</code>: The mean RDI across
-all transcripts - <code>Index(median)</code>: The median RDI across all transcripts
-(this is the main RDI score) - <code>Index(stdev)</code>: The standard deviation of
-RDI values across transcripts</p>
-<div id="rdi-score-interpretation" class="section level3" number="4.2.1">
-<h3><span class="header-section-number">4.2.1</span> RDI Score Interpretation</h3>
+<div id="sample-level-rdi" class="section level2" number="5.2">
+<h2><span class="header-section-number">5.2</span> Sample-level RDI</h2>
+<p>The <code>RDI_sum.tsv</code> file contains:</p>
+<ul>
+<li><code>transcript_id</code>: Set to “est_counts_ratio” (placeholder)</li>
+<li><code>Index(mean)</code>: The mean RDI across all transcripts</li>
+<li><code>Index(median)</code>: The median RDI across all transcripts (this is the
+main RDI score)</li>
+<li><code>Index(stdev)</code>: The standard deviation of RDI values across transcripts</li>
+</ul>
+<div id="rdi-score-interpretation" class="section level3" number="5.2.1">
+<h3><span class="header-section-number">5.2.1</span> RDI Score Interpretation</h3>
 <ul>
 <li><strong>RDI ≈ 1</strong>: Minimal degradation (3’ and 5’ coverage are balanced)</li>
 <li><strong>RDI &lt; 1</strong>: RNA degradation (3’ coverage is higher than 5’
@@ -890,8 +961,8 @@ degradation.</p>
 </div>
 </div>
 </div>
-<div id="example-workflow" class="section level1" number="5">
-<h1><span class="header-section-number">5</span> Example Workflow</h1>
+<div id="example-workflow" class="section level1" number="6">
+<h1><span class="header-section-number">6</span> Example Workflow</h1>
 <p>Here’s a complete example workflow for calculating RDI for multiple
 samples:</p>
 <pre class="r"><code># Set paths
@@ -935,65 +1006,6 @@ summary_table &lt;- data.frame(
 )
 
 print(summary_table)</code></pre>
-</div>
-<div id="test-code" class="section level1" number="6">
-<h1><span class="header-section-number">6</span> Test Code</h1>
-<p>The RDI package includes test data and test functions to verify that the
-package is working correctly. Here’s how to run the tests:</p>
-<div id="test-data" class="section level2" number="6.1">
-<h2><span class="header-section-number">6.1</span> Test Data</h2>
-<p>The package includes the following test files in the <code>extdata</code>
-directory: - <code>test.fasta</code>: A small test reference transcriptome -
-<code>test_1.fq.gz</code>: Test RNA-seq reads (forward) - <code>test_2.fq.gz</code>: Test
-RNA-seq reads (reverse)</p>
-</div>
-<div id="running-tests" class="section level2" number="6.2">
-<h2><span class="header-section-number">6.2</span> Running Tests</h2>
-<p>You can run the tests using the <code>testthat</code> package:</p>
-<pre class="r"><code># Install testthat if not already installed
-# install.packages(&quot;testthat&quot;)
-
-# Run tests from the source directory (when developing)
-library(testthat)
-# If running from the source directory
-test_dir(&quot;tests&quot;)
-
-# If running from the installed package (after installation with tests)
-# test_dir(system.file(&quot;tests&quot;, package = &quot;RDI&quot;))</code></pre>
-</div>
-<div id="test-commands" class="section level2" number="6.3">
-<h2><span class="header-section-number">6.3</span> Test Commands</h2>
-<p>You can also run the test commands manually to verify the functionality:</p>
-<pre class="r"><code># Set paths to test data
-test_data_dir &lt;- system.file(&quot;extdata&quot;, package = &quot;RDI&quot;)
-fasta_file &lt;- file.path(test_data_dir, &quot;test.fasta&quot;)
-fq_file1 &lt;- file.path(test_data_dir, &quot;test_1.fq.gz&quot;)
-fq_file2 &lt;- file.path(test_data_dir, &quot;test_2.fq.gz&quot;)
-
-# Create output directory
-output_dir &lt;- tempdir()
-index_prefix &lt;- file.path(output_dir, &quot;test_index&quot;)
-
-# Test create_index function
-cat(&quot;Testing create_index...\n&quot;)
-create_index(fasta_file, index_prefix)
-
-# Test calculate_RDI function
-cat(&quot;Testing calculate_RDI...\n&quot;)
-index_path &lt;- paste0(index_prefix, &quot;.idx&quot;)
-rdi_output_dir &lt;- file.path(output_dir, &quot;rdi_test&quot;)
-calculate_RDI(fq_file1, fq_file2, index_path, 1, rdi_output_dir)
-
-# Check results
-cat(&quot;Checking test results...\n&quot;)
-rdi_sum_file &lt;- file.path(rdi_output_dir, &quot;RDI_sum.tsv&quot;)
-if (file.exists(rdi_sum_file)) {
-  rdi_result &lt;- read.table(rdi_sum_file, header = TRUE, sep = &quot;\t&quot;)
-  cat(&quot;RDI test result:&quot;, rdi_result$Index.median., &quot;\n&quot;)
-} else {
-  cat(&quot;Test failed: RDI_sum.tsv not found\n&quot;)
-}</code></pre>
-</div>
 </div>
 <div id="troubleshooting" class="section level1" number="7">
 <h1><span class="header-section-number">7</span> Troubleshooting</h1>
