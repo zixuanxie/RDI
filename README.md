@@ -127,7 +127,7 @@ calculate_RDI(fq_file1, fq_file2, index_path, num_threads, output_dir)
 This will generate three files in the output directory: 
 - `abundance.tsv`: kallisto quantification results
 - `transcripts_RDI.tsv`: RDI values for each transcript
-- - `RDI_sum.tsv`: Summary RDI values for the sample
+- `RDI_sum.tsv`: Summary RDI values for the sample
 
 ## Interpreting Results
 
@@ -146,11 +146,10 @@ The `RDI_sum.tsv` file contains: - `transcript_id`: Set to "est_counts_ratio" (p
 
 #### RDI Score Interpretation
 
-- **RDI ≈ 1**: Minimal degradation (3' and 5' coverage are balanced)
-- **RDI \< 1**: RNA degradation (3' coverage is higher than 5' coverage)
-- **RDI \> 1**: Unusual pattern (5' coverage is higher than 3' coverage)
+- **RDI ≈ 100**: Minimal degradation (3' and 5' coverage are balanced)
+- **RDI \< 100**: RNA degradation (one end's coverage is higher than the other end)
 
-Generally, samples with RDI \< 0.8 are considered to have significant degradation.
+Generally, samples with RDI \< 60 are considered to have significant degradation.
 
 ## Example Workflow
 

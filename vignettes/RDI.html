@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2026-04-17" />
+<meta name="date" content="2026-04-18" />
 
 <title>RDI: RNA Degradation Index</title>
 
@@ -713,7 +713,7 @@ function toggle_visibility(id1) {
 <h1 class="title toc-ignore">RDI: RNA Degradation Index</h1>
 <p class="author-name">Zixuan Xie<span class="affil-mark">1</span></p>
 <p class="author-affiliation"><span class="affil-mark">1</span>Crown Bioscience Inc., Suzhou, Jiangsu, P.R. China</p>
-<h4 class="date">2026-04-17</h4>
+<h4 class="date">2026-04-18</h4>
 <h4 class="abstract">Abstract</h4>
 <p>RNA degradation affects RNA sequencing (RNA-seq) data integrity and complicates transcriptomic
 analysis. This study introduces the RNA Degradation Index (RDI), a novel measure to improve RNA
@@ -950,13 +950,10 @@ main RDI score)</li>
 <div id="rdi-score-interpretation" class="section level3" number="5.2.1">
 <h3><span class="header-section-number">5.2.1</span> RDI Score Interpretation</h3>
 <ul>
-<li><strong>RDI ≈ 1</strong>: Minimal degradation (3’ and 5’ coverage are balanced)</li>
-<li><strong>RDI &lt; 1</strong>: RNA degradation (3’ coverage is higher than 5’
-coverage)</li>
-<li><strong>RDI &gt; 1</strong>: Unusual pattern (5’ coverage is higher than 3’
-coverage)</li>
+<li><strong>RDI ≈ 100</strong>: Minimal degradation (3’ and 5’ coverage are balanced)</li>
+<li><strong>RDI &lt; 100</strong>: RNA degradation (one end’s coverage is higher than the other end)</li>
 </ul>
-<p>Generally, samples with RDI &lt; 0.8 are considered to have significant
+<p>Generally, samples with RDI &lt; 60 are considered to have significant
 degradation.</p>
 </div>
 </div>
