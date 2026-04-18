@@ -4,7 +4,6 @@ import argparse
 import pandas as pd
 import numpy as np
 import math
-import os
 
 def process_expression_file(file_path):
     ratios = {}
@@ -54,7 +53,9 @@ def process_summary(ratios):
     data = pd.DataFrame(ratios, index=['est_counts_ratio', 'degradation_mode']).T
 
     # Remove 'infin' values
-    data = data.replace('infin', np.nan).replace(0, np.nan).dropna()
+    data.replace([np.inf, -np.inf, 'infin'], np.nan, inplace=True)
+    data.replace(0, np.nan, inplace=True)
+    data.dropna(inplace=True)
 
     # Convert columns to numeric
     data['est_counts_ratio'] = pd.to_numeric(data['est_counts_ratio'])
@@ -71,11 +72,11 @@ def write_output_RDI(output_file, ratios):
 def write_summary(output_file, data):
     with open(output_file, 'w') as out_file:
         out_file.write('transcript_id\tIndex(mean)\tIndex(median)\tIndex(stdev)\n')
-        mean_value = data.mean()
-        median_value = data.median()
+        mean_value = data.mean()/0.5*100
+        median_value = data.median()/0.5*100
         std_dev_value = data.std()
         out_file.write(f'{data.name}\t{mean_value:.2f}\t{median_value:.2f}\t{std_dev_value:.2f}\n')
-
+        
 def main():
     # Create a command-line parser
     parser = argparse.ArgumentParser(description='Calculate RDI')
@@ -87,19 +88,10 @@ def main():
     # Parse the command-line arguments
     args = parser.parse_args()
     
-    # Normalize paths for cross-platform compatibility
-    input_file = os.path.normpath(args.input)
-    output1_file = os.path.normpath(args.output1)
-    output2_file = os.path.normpath(args.output2)
-    
-    # Create output directories if they don't exist
-    os.makedirs(os.path.dirname(output1_file), exist_ok=True)
-    os.makedirs(os.path.dirname(output2_file), exist_ok=True)
-    
-    ratios = process_expression_file(input_file)
+    ratios = process_expression_file(args.input)
     data = process_summary(ratios)
-    write_output_RDI(output1_file, ratios)
-    write_summary(output2_file, data['est_counts_ratio'])
+    write_output_RDI(args.output1, ratios)
+    write_summary(args.output2, data['est_counts_ratio'])
 
 
 if __name__ == "__main__":
